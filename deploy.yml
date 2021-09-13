@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myappname #FromApplication
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - image: myiappname #FromApplication
+          name: mysql
+          env:
+            - name: MRP
+              valueFrom:
+                secretKeyRef:
+                  name: mysql
+                  key: password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysqlstorage
+              mountPath: /var/lib/mysql
+      volumes:
+        - name: mysqlstorage
+          persistentVolumeClaim:
+            claimName: mypvcappname #FromApplication
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myappname #FromApplication
+  labels:
+    app: wordpress
+spec:
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      containers:
+      - image: myiappname #FromApplication
+        name: wordpress
+        env:
+        - name: WDBH
+          value: mysql-service
+        - name: WDBP
+          valueFrom:
+            secretKeyRef:
+              name: mysql
+              key: password
+        ports:
+        - containerPort: 80
+          name: wordpress
+        volumeMounts:
+        - name: wordpressstorage
+          mountPath: /var/www/html
+      volumes:
+      - name: wordpressstorage
+        persistentVolumeClaim:
+          claimName: mypvcappname #FromApplication
